@@ -1,6 +1,7 @@
 export interface RulesObject {
     rules: Category[]
     glossary: GlossaryTerm[]
+    effectiveDate: number // An epoch timestamp indicating the date the rules came into effect
 }
 
 export interface Category {

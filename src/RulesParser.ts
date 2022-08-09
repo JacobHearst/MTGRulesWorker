@@ -4,11 +4,15 @@ import { Category, GlossaryTerm, Rule, RulesObject, Subcategory, Subrule } from 
  * Get an object containing the rules and the glossary
  * @returns {Promise<RulesObject>}
  */
- export async function getRulesObject(): Promise<RulesObject> {
+ export async function getRulesObject(): Promise<RulesObject | undefined> {
     const rulesText = await getRulesText()
     const rules = await getRules(rulesText)
     const glossary = await getGlossary(rulesText)
-    return { rules, glossary }
+    const effectiveDate = getEffectiveDate(rulesText)
+
+    if (effectiveDate) {
+        return { rules, glossary, effectiveDate }
+    }
 }
 
 /**
@@ -153,4 +157,18 @@ function parseGlossary(lines: string[]): GlossaryTerm[] {
     })
 
     return termsArr
+}
+
+/**
+ * Get the date the rules went into effect as an epoch timestamp
+ * @param rulesText The raw rules text
+ * @returns An epoch timestamp
+ */
+function getEffectiveDate(rulesText: string): number | undefined {
+    const regex = new RegExp('These rules are effective as of (.+)\.')
+    const matches = rulesText.split("\r")[2].match(regex)
+
+    if (matches) {
+        return Date.parse(matches[1])
+    }
 }
