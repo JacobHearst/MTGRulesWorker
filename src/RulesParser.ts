@@ -53,7 +53,7 @@ async function getRulesText(): Promise<string> {
         throw new Error(`Recieved bad response from rules page: ${rulesPageResponse.statusText}`)
     }
 
-    const regex = new RegExp('href="(.+/downloads/MagicCompRules.+\.txt)" target=')
+    const regex = new RegExp('href="(.+/downloads/.+\.txt)" target=')
     const page = await rulesPageResponse.text()
     const matches = page.match(regex)
 
