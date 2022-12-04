@@ -6,6 +6,11 @@ import { Category, GlossaryTerm, Rule, RulesObject, Subcategory, Subrule } from 
  */
  export async function getRulesObject(): Promise<RulesObject | undefined> {
     const rulesText = await getRulesText()
+    if (!rulesText) {
+        console.error("Couldn't get rules text")
+        return undefined
+    }
+
     const rules = await getRules(rulesText)
     const glossary = await getGlossary(rulesText)
     const effectiveDate = getEffectiveDate(rulesText)
@@ -47,7 +52,7 @@ export async function getGlossary(rulesText: string): Promise<GlossaryTerm[]> {
  * Get the latest comprehensive rules text from WOTC
  * @returns {Promise<string>}
  */
-async function getRulesText(): Promise<string> {
+async function getRulesText(): Promise<string | undefined> {
     const rulesPageResponse = await fetch("https://magic.wizards.com/en/rules")
     if (!rulesPageResponse.ok) {
         throw new Error(`Recieved bad response from rules page: ${rulesPageResponse.statusText}`)
@@ -59,10 +64,10 @@ async function getRulesText(): Promise<string> {
 
     if (matches) {
         const response = await fetch(matches[1])
-        return response.text()
+        return (await response.text()).replaceAll("\u0000", "")
+    } else {
+        console.error("Couldn't find rules text link")
     }
-
-    return page
 }
 
 /** 
@@ -164,11 +169,15 @@ function parseGlossary(lines: string[]): GlossaryTerm[] {
  * @param rulesText The raw rules text
  * @returns An epoch timestamp
  */
-function getEffectiveDate(rulesText: string): number | undefined {
+function getEffectiveDate(rulesText: String): number | undefined {
     const regex = new RegExp('These rules are effective as of (.+)\.')
-    const matches = rulesText.split("\r")[2].match(regex)
+    const dateLine = rulesText.split("\r")[2]
+    const matches = dateLine.match(regex)
 
     if (matches) {
+        console.log(matches)
         return Date.parse(matches[1])
+    } else {
+        console.log("No matches")
     }
 }
